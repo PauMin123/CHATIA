@@ -1,64 +1,99 @@
-<%-- 
-    Document   : chat
-    Created on : 30 abr 2025, 10:43:36â€¯p.m.
-    Author     : paulo
---%>
-
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@page import="modelo.ChatDAO"%>
+<%@page import="modelo.Conversacion"%>
+<!DOCTYPE html>
 <html>
 <head>
-    <title>Chat AutÃ³nomo</title>
+    <meta charset="UTF-8">
+    <title>Chat Autónomo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f4f4f4;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: #f8f9fa;
         }
-
-        form {
+        .chat-container {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            margin-top: 30px;
         }
-
-        input[type="text"] {
-            padding: 10px;
+        .sidebar {
             width: 300px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            margin-right: 20px;
         }
-
-        input[type="submit"] {
-            padding: 10px 15px;
-            background-color: #007bff;
-            border: none;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .respuesta {
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            width: 350px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        .chat-box {
+            flex: 1;
         }
     </style>
 </head>
 <body>
-    <h2>Chat AutÃ³nomo ðŸ¤–</h2>
-    <form action="procesarChat.jsp" method="post">
-        <input type="text" name="mensaje" placeholder="Escribe tu mensaje" required />
-        <input type="submit" value="Enviar" />
-    </form>
-    <div class="respuesta">
-        <strong>Respuesta:</strong>
-        <p><%= request.getAttribute("respuesta") != null ? request.getAttribute("respuesta") : "" %></p>
+<div class="container chat-container">
+    <!-- Historial de conversaciones como menú lateral -->
+    <div class="sidebar">
+        <div class="accordion" id="historialAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingHistorial">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHistorial" aria-expanded="true" aria-controls="collapseHistorial">
+                        Historial de Conversaciones
+                    </button>
+                </h2>
+                <div id="collapseHistorial" class="accordion-collapse collapse show" aria-labelledby="headingHistorial">
+                    <div class="accordion-body">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Pregunta</th>
+                                    <th>Intención</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% 
+                                    for (Conversacion c : ChatDAO.obtenerConversaciones()) { 
+                                %>
+                                <tr>
+                                    <td><%= c.getPregunta() %></td>
+                                    <td><%= c.getIntencion() %></td>
+                                </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Chat principal -->
+    <div class="chat-box">
+        <h3 class="text-primary">Chat Autónomo</h3>
+        <form action="procesarChat.jsp" method="post" class="mb-3">
+            <div class="mb-2">
+                <label for="mensaje">Tu mensaje:</label>
+                <input type="text" id="mensaje" name="mensaje" class="form-control" required>
+            </div>
+            <button id="enviarBtn" type="submit" class="btn btn-success">Enviar</button>
+            <div id="spinner" class="spinner-border text-primary ms-2" role="status" style="display: none;">
+                <span class="visually-hidden">Procesando...</span>
+            </div>
+
+        </form>
+
+        <% if (request.getParameter("respuesta") != null) { %>
+        <div class="alert alert-info">
+            <strong>Respuesta del chat:</strong> <%= request.getParameter("respuesta") %>
+        </div>
+        <% } %>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const form = document.querySelector("form");
+    const spinner = document.getElementById("spinner");
+    const enviarBtn = document.getElementById("enviarBtn");
+
+    form.addEventListener("submit", () => {
+        spinner.style.display = "inline-block";
+        enviarBtn.disabled = true;
+    });
+</script>
+
 </body>
 </html>
-

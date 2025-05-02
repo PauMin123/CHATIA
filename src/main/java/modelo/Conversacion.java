@@ -8,29 +8,45 @@ package modelo;
  *
  * @author paulo
  */
-public class Conversacion {
-    private int id;
-    private String usuario;
-    private String mensaje;
-    private String respuesta;
 
-    // Constructor
-    public Conversacion(int id, String usuario, String mensaje, String respuesta) {
-        this.id = id;
-        this.usuario = usuario;
-        this.mensaje = mensaje;
+
+public class Conversacion {
+    private String pregunta;
+    private String respuesta;
+    private String intencion;
+
+    public Conversacion(String pregunta, String respuesta, String intencion) {
+        this.pregunta = pregunta;
+        this.respuesta = respuesta;
+        this.intencion = intencion;
+    }
+
+    public String getPregunta() {
+        return pregunta;
+    }
+
+    public String getRespuesta() {
+        return respuesta;
+    }
+
+    public String getIntencion() {
+        return intencion;
+    }
+
+    public void setPregunta(String pregunta) {
+        this.pregunta = pregunta;
+    }
+
+    public void setRespuesta(String respuesta) {
         this.respuesta = respuesta;
     }
 
-    // Getters y setters
-    public int getId() { return id; }
-    public String getUsuario() { return usuario; }
-    public String getMensaje() { return mensaje; }
-    public String getRespuesta() { return respuesta; }
+    public void setIntencion(String intencion) {
+        this.intencion = intencion;
+    }
 
-    public void setId(int id) { this.id = id; }
-    public void setUsuario(String usuario) { this.usuario = usuario; }
-    public void setMensaje(String mensaje) { this.mensaje = mensaje; }
-    public void setRespuesta(String respuesta) { this.respuesta = respuesta; }
-    
+    @Override
+    public String toString() {
+        return "[" + pregunta + " -> " + respuesta + " (" + intencion + ")]";
+    }
 }

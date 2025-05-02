@@ -12,30 +12,28 @@ package controlador;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
-import modelo.ArbolAVL;
 import modelo.ChatDAO;
-import modelo.Conversacion;
-
-import java.util.List;
 
 @WebListener
 public class InicializadorContexto implements ServletContextListener {
-    public static ArbolAVL arbolGlobal = new ArbolAVL();
 
-    @Override
-    public void contextInitialized(ServletContextEvent sce) {
-        ChatDAO dao = new ChatDAO();
-        List<Conversacion> conversaciones = dao.obtenerTodasLasConversaciones(); // hace el SELECT único
-        for (Conversacion conv : conversaciones) {
-           arbolGlobal.insertar(conv.getMensaje(), conv.getRespuesta());
+@Override
+public void contextInitialized(ServletContextEvent sce) {
+    ChatDAO chatDAO = new ChatDAO();
+    sce.getServletContext().setAttribute("chatDAO", chatDAO);
+    
+    ChatDAO.cargarConversacionesDesdeBD(); // <---- Agregado
+    System.out.println("Conversaciones cargadas desde BD.");
+}
 
-        }
-        sce.getServletContext().setAttribute("arbol", arbolGlobal);
-        System.out.println("Árbol cargado desde la base de datos.");
-    }
+
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        // Aquí no se guarda. Lo hará el CerrarServlet
+        ChatDAO chatDAO = (ChatDAO) sce.getServletContext().getAttribute("chatDAO");
+        if (chatDAO != null) {
+            ChatDAO.guardarConversaciones();
+        }
     }
 }
+

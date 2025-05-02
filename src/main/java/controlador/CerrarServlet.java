@@ -9,36 +9,23 @@ package controlador;
  * @author paulo
  */
 
-
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.ServletContext;
-import modelo.ArbolAVL;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import java.io.IOException;
 import modelo.ChatDAO;
 
-import java.io.IOException;
-
-@WebServlet("/cerrar")
 public class CerrarServlet extends HttpServlet {
-    
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        ServletContext contexto = getServletContext();
-        ArbolAVL arbol = (ArbolAVL) contexto.getAttribute("arbol");
-
-        if (arbol != null) {
-            ChatDAO chat = new ChatDAO();
-            chat.guardarTodo(arbol);  // ahora sí se le pasa el árbol
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ChatDAO chatDAO = (ChatDAO) getServletContext().getAttribute("chatDAO");
+        if (chatDAO != null) {
+            ChatDAO.guardarConversaciones();
         }
-
-        response.sendRedirect("index.jsp");
+        getServletContext().removeAttribute("chatDAO");
+        resp.getWriter().write("Conversaciones guardadas y chat cerrado.");
     }
 }
+
 
 
 

@@ -1,34 +1,30 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package modelo;
 
-/**
- *
- * @author paulo
- */
+import java.text.Normalizer;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ProcesadorNLP {
+    private Set<String> stopWords = Set.of("el", "la", "de", "que", "y", "a", "en", "un");
 
-    private static final Map<String, String> respuestas = new HashMap<>();
+    public List<String> limpiarTexto(String texto) {
+        // Normalizar acentos
+        texto = Normalizer.normalize(texto, Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 
-    static {
-        respuestas.put("hola", "¡Hola! ¿En qué puedo ayudarte?");
-        respuestas.put("adios", "¡Hasta luego!");
-        respuestas.put("nombre", "Soy un chatbot inteligente.");
-        respuestas.put("hora", "No tengo reloj, pero siempre es buen momento para conversar.");
+        // Convertir a minúsculas y quitar puntuación
+        texto = texto.toLowerCase().replaceAll("[¿?¡!.,;:]", "");
+
+        return Arrays.stream(texto.split("\\s+"))
+                .filter(palabra -> !stopWords.contains(palabra))
+                .collect(Collectors.toList());
     }
 
-    public static String procesar(String mensaje) {
-        mensaje = mensaje.toLowerCase();
-        for (String clave : respuestas.keySet()) {
-            if (mensaje.contains(clave)) {
-                return respuestas.get(clave);
-            }
+    public Map<String, Integer> contarFrecuencias(List<String> palabras) {
+        Map<String, Integer> frecuencias = new HashMap<>();
+        for (String palabra : palabras) {
+            frecuencias.put(palabra, frecuencias.getOrDefault(palabra, 0) + 1);
         }
-        return "No entendí muy bien, ¿puedes reformularlo?";
+        return frecuencias;
     }
 }
-

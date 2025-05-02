@@ -9,15 +9,14 @@ package modelo;
  * @author paulo
  */
 
-public class NodoAVL {
-    public Conversacion dato;
-    public NodoAVL izquierdo, derecho;
-    public int altura;
-    Conversacion valor;
+public class CargarModelo {
+    private static ModeloML modelo;
 
-    public NodoAVL(Conversacion dato) {
-        this.dato = dato;
-        this.altura = 1;
+    public static void setModelo(ModeloML m) {
+        modelo = m;
+    }
+
+    public static ModeloML getModelo() {
+        return modelo;
     }
 }
-

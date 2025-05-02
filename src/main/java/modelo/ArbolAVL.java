@@ -1,52 +1,160 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package modelo;
 
-/**
- *
- * @author paulo
- */
+import java.util.*;
 
 public class ArbolAVL {
     private NodoAVL raiz;
+    private ProcesadorNLP nlp = new ProcesadorNLP();
 
-    public NodoAVL getRaiz() {
-        return raiz;
+    public void insertar(Conversacion dato) {
+        raiz = insertar(raiz, dato);
     }
 
-    public void insertar(String pregunta, String respuesta) {
-        raiz = insertar(raiz, pregunta, respuesta);
+    private NodoAVL insertar(NodoAVL nodo, Conversacion dato) {
+        if (nodo == null) return new NodoAVL(dato);
+
+        if (dato.getPregunta().compareToIgnoreCase(nodo.dato.getPregunta()) < 0)
+            nodo.izquierdo = insertar(nodo.izquierdo, dato);
+        else
+            nodo.derecho = insertar(nodo.derecho, dato);
+
+        actualizarAltura(nodo);
+        return balancear(nodo);
     }
 
-    private NodoAVL insertar(NodoAVL nodo, String pregunta, String respuesta) {
-        if (nodo == null) return new NodoAVL(pregunta, respuesta);
-        if (pregunta.compareTo(nodo.pregunta) < 0)
-            nodo.izquierda = insertar(nodo.izquierda, pregunta, respuesta);
-        else if (pregunta.compareTo(nodo.pregunta) > 0)
-            nodo.derecha = insertar(nodo.derecha, pregunta, respuesta);
+    private void actualizarAltura(NodoAVL nodo) {
+        int altIzq = altura(nodo.izquierdo);
+        int altDer = altura(nodo.derecho);
+        nodo.altura = Math.max(altIzq, altDer) + 1;
+    }
+
+    private int altura(NodoAVL nodo) {
+        return nodo == null ? 0 : nodo.altura;
+    }
+
+    private int factorBalance(NodoAVL nodo) {
+        return altura(nodo.izquierdo) - altura(nodo.derecho);
+    }
+
+    private NodoAVL balancear(NodoAVL nodo) {
+        int balance = factorBalance(nodo);
+
+        if (balance > 1) {
+            if (factorBalance(nodo.izquierdo) < 0)
+                nodo.izquierdo = rotarIzquierda(nodo.izquierdo);
+            return rotarDerecha(nodo);
+        }
+
+        if (balance < -1) {
+            if (factorBalance(nodo.derecho) > 0)
+                nodo.derecho = rotarDerecha(nodo.derecho);
+            return rotarIzquierda(nodo);
+        }
+
         return nodo;
     }
 
-    // Método para buscar una pregunta en el árbol
-    public String buscar(String pregunta) {
-        return buscarEnNodo(raiz, pregunta);  // Llamada al método recursivo
+    private NodoAVL rotarDerecha(NodoAVL y) {
+        NodoAVL x = y.izquierdo;
+        NodoAVL T2 = x.derecho;
+
+        x.derecho = y;
+        y.izquierdo = T2;
+
+        actualizarAltura(y);
+        actualizarAltura(x);
+
+        return x;
     }
 
-    private String buscarEnNodo(NodoAVL nodo, String pregunta) {
-        if (nodo == null) {
-            return null;  // No encontrado
-        }
+    private NodoAVL rotarIzquierda(NodoAVL x) {
+        NodoAVL y = x.derecho;
+        NodoAVL T2 = y.izquierdo;
 
-        int comparacion = pregunta.compareTo(nodo.pregunta);
+        y.izquierdo = x;
+        x.derecho = T2;
 
-        if (comparacion == 0) {
-            return nodo.respuesta;  // Encontrado, devolver respuesta
-        } else if (comparacion < 0) {
-            return buscarEnNodo(nodo.izquierda, pregunta);  // Buscar en la izquierda
+        actualizarAltura(x);
+        actualizarAltura(y);
+
+        return y;
+    }
+
+    // Buscar conversación más similar con umbral de similitud
+    public Conversacion buscarSimilar(List<String> tokensEntrada) {
+        ResultadoBusqueda resultado = buscarSimilarRec(raiz, tokensEntrada, null, -1.0);
+
+        if (resultado.similitud >= 0.5) {
+            System.out.println("✅ Similitud aceptada: " + resultado.similitud);
+            return resultado.conversacion;
         } else {
-            return buscarEnNodo(nodo.derecha, pregunta);  // Buscar en la derecha
+            System.out.println("⚠️ Similitud demasiado baja: " + resultado.similitud);
+            return null;
         }
     }
+
+    private ResultadoBusqueda buscarSimilarRec(NodoAVL nodo, List<String> entrada, Conversacion mejor, double mejorSim) {
+        if (nodo == null) return new ResultadoBusqueda(mejor, mejorSim);
+
+        List<String> tokensNodo = nlp.limpiarTexto(nodo.dato.getPregunta());
+
+        Map<String, Integer> entradaMap = Similaridad.aFrecuencias(entrada);
+        Map<String, Integer> nodoMap = Similaridad.aFrecuencias(tokensNodo);
+
+        double sim = Similaridad.coseno(entradaMap, nodoMap);
+
+        System.out.println("🔍 Comparando con: \"" + nodo.dato.getPregunta() + "\" => Similitud: " + sim);
+
+        if (sim > mejorSim) {
+            mejorSim = sim;
+            mejor = nodo.dato;
+        }
+
+        ResultadoBusqueda izq = buscarSimilarRec(nodo.izquierdo, entrada, mejor, mejorSim);
+        ResultadoBusqueda der = buscarSimilarRec(nodo.derecho, entrada, izq.conversacion, izq.similitud);
+
+        return der.similitud > izq.similitud ? der : izq;
+    }
+
+    private static class ResultadoBusqueda {
+        Conversacion conversacion;
+        double similitud;
+
+        ResultadoBusqueda(Conversacion conversacion, double similitud) {
+            this.conversacion = conversacion;
+            this.similitud = similitud;
+        }
+    }
+
+    public List<Conversacion> obtenerTodas() {
+        List<Conversacion> lista = new ArrayList<>();
+        inorden(raiz, lista);
+        return lista;
+    }
+
+    private void inorden(NodoAVL nodo, List<Conversacion> lista) {
+        if (nodo != null) {
+            inorden(nodo.izquierdo, lista);
+            lista.add(nodo.valor);  // Suponiendo que nodo.valor es tipo Conversacion
+            inorden(nodo.derecho, lista);
+        }
+    }
+    // Buscar una conversación por intención (para uso con ML)
+public Conversacion buscarPorIntencion(String intencion) {
+    return buscarPorIntencionRec(raiz, intencion);
+}
+
+private Conversacion buscarPorIntencionRec(NodoAVL nodo, String intencion) {
+    if (nodo == null) return null;
+
+    if (nodo.dato.getIntencion().equalsIgnoreCase(intencion)) {
+        return nodo.dato;
+    }
+
+    Conversacion izq = buscarPorIntencionRec(nodo.izquierdo, intencion);
+    if (izq != null) return izq;
+
+    return buscarPorIntencionRec(nodo.derecho, intencion);
+}
+
 }

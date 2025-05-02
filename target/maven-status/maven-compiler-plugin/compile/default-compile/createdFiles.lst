@@ -1,9 +1,15 @@
+modelo\ClasificadorNaiveBayes.class
+modelo\ArbolAVL$ResultadoBusqueda.class
+modelo\SimilitudTexto.class
+modelo\ProcesadorNLP.class
 modelo\NodoAVL.class
+modelo\CargarModelo.class
 modelo\GestorBaseDatos.class
+modelo\Similaridad.class
 modelo\ChatDAO.class
+modelo\ModeloML.class
 controlador\CerrarServlet.class
 modelo\ArbolAVL.class
 modelo\Conexion.class
 controlador\InicializadorContexto.class
 modelo\Conversacion.class
-modelo\ProcesadorNLP.class

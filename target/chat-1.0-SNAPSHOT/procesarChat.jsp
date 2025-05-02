@@ -1,43 +1,60 @@
-<%-- 
-    Document   : procesarChat
-    Created on : 30 abr 2025, 10:44:23?p.m.
-    Author     : paulo
---%>
-
 <%@ page import="modelo.ChatDAO" %>
-<%@ page import="javax.servlet.http.*" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
+
 <%
     String mensaje = request.getParameter("mensaje");
-    ChatDAO chat = (ChatDAO) application.getAttribute("chat");
+    String respuesta = null;
+    boolean sinRespuesta = false;
 
-    if (chat == null) {
-        chat = new ChatDAO();
-        application.setAttribute("chat", chat);
-    }
+    // Solo si hay mensaje, procesar con Naive Bayes o Ã¡rbol
+    if (mensaje != null && !mensaje.trim().isEmpty()) {
+        respuesta = ChatDAO.procesarMensaje(mensaje);
 
-    String respuesta = chat.responder(mensaje);
-
-    if (respuesta == null) {
-        // No se encontró, pedir aprendizaje
-        String nuevaRespuesta = request.getParameter("nuevaRespuesta");
-
-        if (nuevaRespuesta == null) {
-            %>
-            <form action="procesarChat.jsp" method="post">
-                <input type="hidden" name="mensaje" value="<%= mensaje %>" />
-                <label>El sistema no sabe responder. ¿Cuál sería una buena respuesta?</label><br/>
-                <input type="text" name="nuevaRespuesta" required />
-                <input type="submit" value="Aprender" />
-            </form>
-            <%
-            return;
-        } else {
-            chat.aprender(mensaje, nuevaRespuesta);
-            respuesta = "¡Gracias! He aprendido algo nuevo. ?";
+        if (respuesta == null) {
+            sinRespuesta = true; // No se encontrÃ³ una coincidencia o intenciÃ³n
         }
     }
-
-    request.setAttribute("respuesta", respuesta);
-    request.getRequestDispatcher("chat.jsp").forward(request, response);
 %>
 
+<head>
+    <meta charset="UTF-8">
+    <title>Procesar Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<%-- Mostrar formulario solo si el mensaje no fue comprendido --%>
+<% if (sinRespuesta) { %>
+    <div class="container mt-5">
+        <div class="card shadow">
+            <div class="card-header bg-warning">
+                <strong>Ayuda al sistema a aprender</strong>
+            </div>
+            <div class="card-body">
+                <form action="aprender.jsp" method="post">
+                    <input type="hidden" name="pregunta" value="<%= mensaje %>">
+
+                    <div class="mb-3">
+                        <label for="respuestaAprendida" class="form-label">Respuesta correcta:</label>
+                        <input type="text" name="respuestaAprendida" id="respuestaAprendida" class="form-control" placeholder="Escribe la respuesta correcta" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="intencion" class="form-label">IntenciÃ³n de la pregunta:</label>
+                        <input type="text" name="intencion" id="intencion" class="form-control" placeholder="Ej: saludo, informaciÃ³n, despedida" required>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-success">Guardar y Aprender</button>
+                        <a href="chat.jsp" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<% } else { %>
+    <%-- Redirigir si se entendiÃ³ el mensaje --%>
+    <script>
+        window.location.href = "chat.jsp?respuesta=<%= URLEncoder.encode(respuesta, "UTF-8") %>";
+    </script>
+<% } %>
