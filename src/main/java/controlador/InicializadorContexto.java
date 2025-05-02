@@ -1,39 +1,30 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controlador;
-
-/**
- *
- * @author paulo
- */
 
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import modelo.ChatDAO;
+import modelo.Conversacion;
+import modelo.ArbolAVL;
+
+import java.util.List;
 
 @WebListener
 public class InicializadorContexto implements ServletContextListener {
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        List<Conversacion> historial = ChatDAO.obtenerConversaciones();
+        ArbolAVL arbol = new ArbolAVL();
+        for (Conversacion c : historial) {
+            arbol.insertar(c);
+        }
 
-@Override
-public void contextInitialized(ServletContextEvent sce) {
-    ChatDAO chatDAO = new ChatDAO();
-    sce.getServletContext().setAttribute("chatDAO", chatDAO);
-    
-    ChatDAO.cargarConversacionesDesdeBD(); // <---- Agregado
-    System.out.println("Conversaciones cargadas desde BD.");
-}
-
-
+        // Guardar el árbol en el contexto para que esté disponible globalmente
+        sce.getServletContext().setAttribute("arbolConversaciones", arbol);
+    }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        ChatDAO chatDAO = (ChatDAO) sce.getServletContext().getAttribute("chatDAO");
-        if (chatDAO != null) {
-            ChatDAO.guardarConversaciones();
-        }
+        ChatDAO.guardarConversaciones();
     }
 }
-

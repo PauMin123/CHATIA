@@ -8,9 +8,10 @@ public class ChatDAO {
     private static ArbolAVL arbol = new ArbolAVL();
     private static ModeloML modelo = new ModeloML();
     private static ClasificadorNaiveBayes clasificador = new ClasificadorNaiveBayes();
-    private static List<Conversacion> nuevasConversaciones = new ArrayList<>();
+    private static List<Conversacion> conversacionesEnMemoria = new ArrayList<>();
+    private static final List<Conversacion> aprendidosTemporalmente = new ArrayList<>();
 
-    // Cargar datos desde base de datos
+    // Cargar datos desde la base de datos
     public static void cargarConversacionesDesdeBD() {
         try (Connection con = Conexion.conectar();
              PreparedStatement ps = con.prepareStatement("SELECT pregunta, respuesta, intencion FROM conversaciones");
@@ -25,13 +26,14 @@ public class ChatDAO {
 
                 String preguntaNormalizada = ChatDAO.normalizarTexto(pregunta);
                 Conversacion conv = new Conversacion(preguntaNormalizada, respuesta, intencion);
+
                 arbol.insertar(conv);
 
-                // Entrenar modelo clásico (tokens) y Naive Bayes
                 List<String> tokens = nlp.limpiarTexto(preguntaNormalizada);
                 modelo.entrenar(intencion, tokens);
                 clasificador.entrenar(preguntaNormalizada, intencion);
 
+                conversacionesEnMemoria.add(conv);
             }
 
         } catch (Exception e) {
@@ -39,34 +41,45 @@ public class ChatDAO {
         }
     }
 
-    // Procesar entrada del usuario
+    // Procesa el mensaje y responde
     public static String procesarMensaje(String mensaje) {
-    ProcesadorNLP nlp = new ProcesadorNLP();
-    String mensajeNormalizado = normalizarTexto(mensaje);
-    List<String> tokens = nlp.limpiarTexto(mensajeNormalizado);
-    Conversacion mejorCoincidencia = arbol.buscarSimilar(tokens);
-
-
-    if (mejorCoincidencia != null) {
-        return mejorCoincidencia.getRespuesta();
+    if (mensaje == null || mensaje.trim().isEmpty()) {
+        return "Por favor, escribe algo.";
     }
 
-    // Clasificación con Naive Bayes
-    String intencion = clasificador.clasificar(ChatDAO.normalizarTexto(mensaje));
-    System.out.println("Intención predicha: " + intencion);  // 👈 útil para debug
+    String mensajeNormalizado = mensaje.trim().toLowerCase();
 
-    // Buscar una conversación por esa intención
-    Conversacion porIntencion = arbol.buscarPorIntencion(intencion);
-    if (porIntencion != null) {
-        return porIntencion.getRespuesta();
+    // 1. Buscar coincidencia exacta en AVL
+    Conversacion resultado = arbolAVL.buscar(mensajeNormalizado);
+    if (resultado != null) {
+        return resultado.getRespuesta();
     }
 
-    // No se encontró nada
-    return null;
+    // 2. Clasificar con Naive Bayes (si hay datos)
+    if (clasificador == null || clasificador.getNumeroDeIntenciones() == 0) {
+        return "INTENCION_NO_ENTENDIDA";
+    }
+
+    String intencion = clasificador.clasificar(mensajeNormalizado);
+    double confianza = clasificador.calcularProbabilidad(mensajeNormalizado, intencion);
+
+    if (intencion == null || confianza < 0.7) { // <= IMPORTANTE: subimos el umbral
+        return "INTENCION_NO_ENTENDIDA";
+    }
+
+    // 3. Buscar una respuesta para esa intención (si existe en memoria)
+    for (Conversacion c : conversacionesEnMemoria) {
+        if (c.getIntencion().equalsIgnoreCase(intencion)) {
+            return c.getRespuesta(); // ejemplo representativo
+        }
+    }
+
+    // 4. No se encontró una respuesta para la intención
+    return "INTENCION_NO_ENTENDIDA";
 }
 
 
-    // Registrar nueva conversación aprendida
+    // Registra una nueva conversación aprendida en BD y memoria
     public static void registrarConversacion(String pregunta, String respuesta, String intencion) {
         try (Connection conn = Conexion.conectar()) {
             String sql = "INSERT INTO conversaciones (pregunta, respuesta, intencion) VALUES (?, ?, ?)";
@@ -84,20 +97,42 @@ public class ChatDAO {
             List<String> tokens = new ProcesadorNLP().limpiarTexto(preguntaNormalizada);
             modelo.entrenar(intencion, tokens);
 
+            conversacionesEnMemoria.add(nueva);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // Guardar nuevas conversaciones (por si se maneja batch en memoria)
+    // Entrenamiento en memoria solamente
+    public static void entrenarTemporal(String pregunta, String respuesta, String intencion) {
+        String preguntaNormalizada = normalizarTexto(pregunta);
+        Conversacion nueva = new Conversacion(preguntaNormalizada, respuesta, intencion);
+
+        for (Conversacion c : conversacionesEnMemoria) {
+    if (c.getPregunta().equalsIgnoreCase(preguntaNormalizada.trim()) &&
+        c.getIntencion().equalsIgnoreCase(intencion)) {
+        System.out.println("❌ Ya existe esta pregunta con esa intención.");
+        return;
+    }
+}
+
+
+        conversacionesEnMemoria.add(nueva);
+        aprendidosTemporalmente.add(nueva);
+        arbol.insertar(nueva);
+        clasificador.entrenar(preguntaNormalizada, intencion);
+
+        System.out.println("🧠 Aprendido temporalmente: " + preguntaNormalizada);
+    }
+
+    // Guarda los aprendizajes temporales en la BD
     public static void guardarConversaciones() {
-        if (nuevasConversaciones.isEmpty()) return;
+        if (aprendidosTemporalmente.isEmpty()) return;
 
         try (Connection con = Conexion.conectar();
-             PreparedStatement ps = con.prepareStatement(
-                     "INSERT INTO conversaciones (pregunta, respuesta, intencion) VALUES (?, ?, ?)")) {
+             PreparedStatement ps = con.prepareStatement("INSERT INTO conversaciones (pregunta, respuesta, intencion) VALUES (?, ?, ?)")) {
 
-            for (Conversacion conv : nuevasConversaciones) {
+            for (Conversacion conv : aprendidosTemporalmente) {
                 ps.setString(1, conv.getPregunta());
                 ps.setString(2, conv.getRespuesta());
                 ps.setString(3, conv.getIntencion());
@@ -105,7 +140,7 @@ public class ChatDAO {
             }
 
             ps.executeBatch();
-            nuevasConversaciones.clear();
+            aprendidosTemporalmente.clear();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -113,21 +148,7 @@ public class ChatDAO {
     }
 
     public static List<Conversacion> obtenerConversaciones() {
-        List<Conversacion> lista = new ArrayList<>();
-        try (Connection con = Conexion.conectar();
-             PreparedStatement ps = con.prepareStatement("SELECT pregunta, respuesta, intencion FROM conversaciones");
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                lista.add(new Conversacion(rs.getString("pregunta"),
-                                           rs.getString("respuesta"),
-                                           rs.getString("intencion")));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return lista;
+        return new ArrayList<>(conversacionesEnMemoria);
     }
 
     public static String normalizarTexto(String texto) {
@@ -140,5 +161,10 @@ public class ChatDAO {
 
     public static List<Conversacion> getHistorialConversaciones() {
         return obtenerConversaciones();
+    }
+
+    // ✅ Nuevo método para verificar si no se entendió
+    public static boolean esIntencionNoEntendida(String respuesta) {
+        return "INTENCION_NO_ENTENDIDA".equalsIgnoreCase(respuesta);
     }
 }

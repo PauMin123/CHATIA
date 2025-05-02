@@ -126,19 +126,20 @@ public class ArbolAVL {
         }
     }
 
-    public List<Conversacion> obtenerTodas() {
-        List<Conversacion> lista = new ArrayList<>();
-        inorden(raiz, lista);
-        return lista;
-    }
+   public List<Conversacion> obtenerConversaciones() {
+    List<Conversacion> lista = new ArrayList<>();
+    inorden(raiz, lista);
+    return lista;
+}
 
-    private void inorden(NodoAVL nodo, List<Conversacion> lista) {
-        if (nodo != null) {
-            inorden(nodo.izquierdo, lista);
-            lista.add(nodo.valor);  // Suponiendo que nodo.valor es tipo Conversacion
-            inorden(nodo.derecho, lista);
-        }
+private void inorden(NodoAVL nodo, List<Conversacion> lista) {
+    if (nodo != null) {
+        inorden(nodo.izquierdo, lista);
+        lista.add(nodo.dato); // ✅ corregido
+        inorden(nodo.derecho, lista);
     }
+}
+
     // Buscar una conversación por intención (para uso con ML)
 public Conversacion buscarPorIntencion(String intencion) {
     return buscarPorIntencionRec(raiz, intencion);

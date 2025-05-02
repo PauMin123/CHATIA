@@ -1,10 +1,11 @@
 <%@page import="modelo.ChatDAO"%>
 <%@page import="modelo.Conversacion"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Chat Autónomo</title>
+    <title>Chat AutÃ³nomo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -25,7 +26,7 @@
 </head>
 <body>
 <div class="container chat-container">
-    <!-- Historial de conversaciones como menú lateral -->
+    <!-- Historial de conversaciones como menÃº lateral -->
     <div class="sidebar">
         <div class="accordion" id="historialAccordion">
             <div class="accordion-item">
@@ -40,7 +41,7 @@
                             <thead>
                                 <tr>
                                     <th>Pregunta</th>
-                                    <th>Intención</th>
+                                    <th>IntenciÃ³n</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -62,7 +63,7 @@
 
     <!-- Chat principal -->
     <div class="chat-box">
-        <h3 class="text-primary">Chat Autónomo</h3>
+        <h3 class="text-primary">Chat AutÃ³nomo</h3>
         <form action="procesarChat.jsp" method="post" class="mb-3">
             <div class="mb-2">
                 <label for="mensaje">Tu mensaje:</label>

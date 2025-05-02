@@ -1,17 +1,14 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="modelo.ChatDAO" %>
-<%@ page import="java.net.URLEncoder" %>
 <%
     String pregunta = request.getParameter("pregunta");
     String respuesta = request.getParameter("respuestaAprendida");
     String intencion = request.getParameter("intencion");
 
     if (pregunta != null && respuesta != null && intencion != null) {
-        // Registrar en BD, árbol AVL y Naive Bayes
         ChatDAO.registrarConversacion(pregunta, respuesta, intencion);
-
-        // Redirigir al chat con la nueva respuesta
-        response.sendRedirect("chat.jsp?respuesta=" + URLEncoder.encode(respuesta, "UTF-8"));
+        session.setAttribute("respuestaChat", respuesta);
+        response.sendRedirect("chat.jsp");
         return;
     }
 %>

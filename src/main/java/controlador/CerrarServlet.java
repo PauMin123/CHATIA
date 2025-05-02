@@ -1,31 +1,31 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controlador;
 
-/**
- *
- * @author paulo
- */
-
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import java.io.IOException;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import modelo.ChatDAO;
+import modelo.Conversacion;
+import modelo.ArbolAVL;
 
+import java.io.IOException;
+import java.util.List;
+
+@WebServlet("/cerrar")
 public class CerrarServlet extends HttpServlet {
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        ChatDAO chatDAO = (ChatDAO) getServletContext().getAttribute("chatDAO");
-        if (chatDAO != null) {
-            ChatDAO.guardarConversaciones();
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        ArbolAVL arbol = (ArbolAVL) getServletContext().getAttribute("arbolConversaciones");
+
+        if (arbol != null) {
+            ChatDAO dao = new ChatDAO();
+            List<Conversacion> conversaciones = arbol.obtenerConversaciones();
+            for (Conversacion c : conversaciones) {
+                dao.guardarConversaciones(); // Evitar duplicados si ya está
+            }
         }
-        getServletContext().removeAttribute("chatDAO");
-        resp.getWriter().write("Conversaciones guardadas y chat cerrado.");
+
+        response.getWriter().println("Conversaciones guardadas exitosamente.");
     }
 }
-
-
-
-

@@ -1,14 +1,14 @@
-C:\ProyectosJAVA\chat\src\main\java\modelo\Conexion.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\GestorBaseDatos.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\ModeloML.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\SimilitudTexto.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\Conversacion.java
-C:\ProyectosJAVA\chat\src\main\java\controlador\InicializadorContexto.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\ClasificadorNaiveBayes.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\ProcesadorNLP.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\CargarModelo.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\ChatDAO.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\ArbolAVL.java
-C:\ProyectosJAVA\chat\src\main\java\controlador\CerrarServlet.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\Similaridad.java
-C:\ProyectosJAVA\chat\src\main\java\modelo\NodoAVL.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\Similaridad.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\ModeloML.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\NodoAVL.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\controlador\InicializadorContexto.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\CargarModelo.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\SimilitudTexto.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\ChatDAO.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\Conversacion.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\ArbolAVL.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\GestorBaseDatos.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\ClasificadorNaiveBayes.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\ProcesadorNLP.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\controlador\CerrarServlet.java
+C:\Users\Paulo Minera\Documents\chat\src\main\java\modelo\Conexion.java
